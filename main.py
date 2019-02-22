@@ -139,7 +139,7 @@ for _d in dataList:
 
 # 柱状图
 
-# 年连续干旱最长时间段
+# 年连续晴天最长时间段
 
 # 年连续降雨最长时间段
 
@@ -148,22 +148,46 @@ for _d in dataList:
 # 年连续低温最长时间段
 
 
-# 年干旱天数统计
-#t = df_TAVG[df_TAVG['value'] > 0].groupby('year')
-#print(t)
+
 # 年降雨天数统计
-
-
+se_rainyD = (df_PRCP[df_PRCP['value'] > 0]).groupby('year')['value'].count()
 # 年高温天数统计
+se_LowT = (df_TAVG[df_TAVG['value'] < 10]).groupby('year')['value'].count()
 # 年低温天数统计
+se_HighT = (df_TAVG[df_TAVG['value'] > 30]).groupby('year')['value'].count()
 
+
+
+
+df_YearCount = DataFrame()
+df_YearCount['year'] = se_rainyD.index
+df_YearCount = df_YearCount.set_index('year')
+df_YearCount['rainyDays'] = se_rainyD.values
+df_YearCount['coldDays'] = se_LowT.values
+df_YearCount['hotDays'] = se_HighT.values
+
+print(df_YearCount['year'])
+
+
+df_YearCount.plot(kind='line')
+plt.plot(df_YearCount.index, df_YearCount['rainyDays'], color='silver', label='rainyDays')
+plt.plot(df_YearCount.index, df_YearCount['coldDays'], color='dodgerblue', label='coldDays')
+plt.plot(df_YearCount.index, df_YearCount['hotDays'], color='orange', label='hotDays')
+
+
+
+plt.gca().grid()# 网格
+plt.xlabel("Year")
+plt.title("Historical Weather Count")
+plt.show()
 
 #print(df_PRCP)
 #df_TAVG.reset_index(drop=True)
 #print(df_TAVG)
-print(df_PRCP)
-t = df_PRCP.set_index('datetime')
-print(t)
+#print(df_PRCP)
+df_PRCP = df_PRCP.set_index('datetime')
+df_TAVG = df_TAVG.set_index('datetime')
+#print(t)
 # 365天的散点图
 
 
