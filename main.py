@@ -134,7 +134,7 @@ for _d in dataList:
                 tMinTime = _year + '/' + _month + '/' + str(i)
 
     # 调试使用，避免数据加载时间过长
-    if len(df_PRCP) and len(df_TAVG) > 1000:
+    if len(df_PRCP) and len(df_TAVG) > 100000:
         break
 
 # 柱状图
@@ -166,16 +166,18 @@ df_YearCount['rainyDays'] = se_rainyD.values
 df_YearCount['coldDays'] = se_LowT.values
 df_YearCount['hotDays'] = se_HighT.values
 
-print(df_YearCount['year'])
 
 
-df_YearCount.plot(kind='line')
+#df_YearCount.plot(kind='line')
+#plt.figure()
 plt.plot(df_YearCount.index, df_YearCount['rainyDays'], color='silver', label='rainyDays')
-plt.plot(df_YearCount.index, df_YearCount['coldDays'], color='dodgerblue', label='coldDays')
-plt.plot(df_YearCount.index, df_YearCount['hotDays'], color='orange', label='hotDays')
+plt.plot(df_YearCount.index, df_YearCount['hotDays'], color='#FF6F00', label='hotDays')
+plt.plot(df_YearCount.index, df_YearCount['coldDays'], color='#5CCCCC', label='coldDays')
 
+plt.gca().xaxis.set_major_locator(MultipleLocator(5))
+#plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
 
-
+plt.legend()
 plt.gca().grid()# 网格
 plt.xlabel("Year")
 plt.title("Historical Weather Count")
@@ -203,7 +205,6 @@ if ISTEST == False:
 # TAVG
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
-
 plt.gca().grid()# 网格
 # plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 plt.scatter(df_TAVG['dayIndex'], df_TAVG['value'], s=80, c=df_TAVG['color'], marker='.', alpha=0.05)
