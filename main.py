@@ -45,7 +45,7 @@ def month_formatter(x,pos):
     if v > 12:
         return '-'
     else:
-        return v
+        return str(v)
 
 stationID = 'CHM00057679'
 df_PRCP = DataFrame(columns=['datetime', 'year', 'month', 'day', 'dayIndex', 'value', 'color'])
@@ -137,11 +137,70 @@ for _d in dataList:
     if len(df_PRCP) and len(df_TAVG) > 100000:
         break
 
+
+# 画布基础设置
+if ISTEST == False:
+    plt.rcParams['figure.figsize'] = (12.0, 8.0) # 设置figure_size尺寸
+    plt.rcParams['image.interpolation'] = 'nearest' # 设置 interpolation style
+    plt.rcParams['image.cmap'] = 'gray' # 设置 颜色 style
+
+    plt.rcParams['savefig.dpi'] = 300 #图片像素
+    plt.rcParams['figure.dpi'] = 300 #分辨率
+
+
+df_PRCP = df_PRCP.set_index('datetime')
+df_TAVG = df_TAVG.set_index('datetime')
 # 柱状图
 
 # 年连续晴天最长时间段
 
+#df_rainyD = se_rainyD.to_frame('rainyDays')
+
+
+# 计算连续天数
+def continue_count(_df):
+    _count = 0
+    _index = 0
+    _maxCount = 0
+    _maxDayIndex = 0
+    _maxDesc = ''
+    for i in _df['dayIndex']:
+        if i - _index == 1:
+            _count += 1
+            if _count > _maxCount:
+                _maxCount = _count
+                _maxDayIndex = i - _maxCount + 1
+                _maxDesc = _df[_df['dayIndex'] == _maxDayIndex].index
+        else:
+            _count = 1
+        _index = i
+    _tdf = DataFrame({'year': [_df['year'][0]],'maxCount':[_maxCount],'maxDayIndex':[_maxDayIndex],'maxDesc':_maxDesc[0]})
+    return _tdf
+
 # 年连续降雨最长时间段
+df_stillRainyD = (df_PRCP[df_PRCP['value'] > 0]).groupby('year').apply(continue_count)
+df_stillRainyD = df_stillRainyD.set_index('year')
+print(df_stillRainyD)
+
+plt.xlabel("Month")
+plt.ylabel("Year")
+plt.title("Continuous Rainy Count : 1951-2019")
+plt.barh(df_stillRainyD.index, df_stillRainyD['maxDayIndex'] + df_stillRainyD['maxCount'], color=list(map(lambda v:color(tuple(hsv2rgb(int(-7.2 * v) + 180, 1, 1))), df_stillRainyD['maxCount'])))
+plt.barh(df_stillRainyD.index, df_stillRainyD['maxDayIndex'] , color='#FFFFFF')
+plt.gca().xaxis.set_major_locator(MultipleLocator(31))
+plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
+plt.gca().yaxis.set_major_locator(MultipleLocator(5))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x,y:int(x +1950)))
+#修改次刻度
+plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
+plt.gca().yaxis.set_minor_locator(MultipleLocator(1))
+
+#打开网格
+plt.gca().xaxis.grid(True, which='major') #x坐标轴的网格使用主刻度
+plt.gca().yaxis.grid(True, which='minor') #y坐标轴的网格使用次刻度
+
+
+plt.show()
 
 # 年连续高温最长时间段
 
@@ -158,9 +217,8 @@ df_LowT = se_LowT.to_frame('coldDays')
 # 年低温天数统计
 se_HighT = (df_TAVG[df_TAVG['value'] > 30]).groupby('year')['value'].count()
 df_HighT = se_HighT.to_frame('hotDays')
-
-df_YearCount = pd.concat([df_rainyD,df_LowT,df_HighT],axis=1,sort=False)
-
+# 汇总
+df_YearCount = pd.concat([df_rainyD,df_LowT,df_HighT], axis=1, sort=False)
 
 #df_YearCount = DataFrame()
 #df_YearCount['year'] = se_rainyD.index
@@ -168,57 +226,66 @@ df_YearCount = pd.concat([df_rainyD,df_LowT,df_HighT],axis=1,sort=False)
 #df_YearCount['rainyDays'] = se_rainyD.values
 #df_YearCount['coldDays'] = se_LowT.values
 #df_YearCount['hotDays'] = se_HighT.values
-
-
-
 #df_YearCount.plot(kind='line')
 #plt.figure()
+
 plt.plot(df_YearCount.index, df_YearCount['rainyDays'], color='silver', label='rainyDays')
 plt.plot(df_YearCount.index, df_YearCount['hotDays'], color='#FF6F00', label='hotDays')
 plt.plot(df_YearCount.index, df_YearCount['coldDays'], color='#5CCCCC', label='coldDays')
-
 plt.gca().xaxis.set_major_locator(MultipleLocator(5))
-#plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
+plt.gca().xaxis.set_major_formatter(FuncFormatter(lambda x,y:int(x +1950)))
 
 plt.legend()
 plt.gca().grid()# 网格
 plt.xlabel("Year")
-plt.title("Historical Weather Count")
+plt.ylabel("Days Count")
+plt.title("Historical Weather Count : 1951-2019")
 plt.show()
 
 #print(df_PRCP)
 #df_TAVG.reset_index(drop=True)
 #print(df_TAVG)
 #print(df_PRCP)
-df_PRCP = df_PRCP.set_index('datetime')
-df_TAVG = df_TAVG.set_index('datetime')
+
 #print(t)
 
 # 历史同日降雨次数统计
 se_HisRainyD = (df_PRCP[df_PRCP['value'] > 0]).groupby('dayIndex')['value'].count()
+
 #df_HisRainyD = se_HisRainyD.to_frame('count')
 #df_HisRainyD['color'] = Series(map(lambda v:color(tuple(hsv2rgb(int(-7 * v) + 240, 1, 1))), se_HisRainyD.values)).values
-
+#print(se_HisRainyD  / len(se_HisRainyD))
 plt.xlabel("Month")
-plt.title("Historical Same Day Rainy Count")
-plt.bar(se_HisRainyD.index, se_HisRainyD, color=list(map(lambda v:color(tuple(hsv2rgb(int(-7 * v) + 240, 1, 1))), se_HisRainyD.values)))
+plt.ylabel("Probability %")
+plt.title("Historical Same Day Rainy Count : 1951-2019")
+plt.bar(se_HisRainyD.index, se_HisRainyD / len(df_PRCP.groupby('year')) * 100, color=list(map(lambda v:color(tuple(hsv2rgb(int(2.4 * v) + 120, 1, 1))), se_HisRainyD.values)))
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
+plt.ylim(0, 100)
+plt.gca().yaxis.set_major_locator(plt.MultipleLocator(10))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: str(y * 10 - 10) + '%'))
+plt.show()
+
+# 历史同日冻雨次数统计
+df_HisRainy = df_PRCP[df_PRCP['value'] > 0]
+df_HisCold = pd.merge(df_TAVG[df_TAVG['value'] < 10],df_TAVG[df_TAVG['value'] > -100],how='inner',on=['datetime','year','month','day','dayIndex','value','color'])
+df_HisRainyCold = pd.merge(df_HisRainy,df_HisCold,left_on='datetime',right_index=True,how='inner')
+se_HisRainyColdD = df_HisRainyCold.groupby('dayIndex_x')['value_x'].count()
+
+plt.xlabel("Month")
+plt.ylabel("Probability %")
+plt.title("Historical Same Day Rainy and Cold Count : 1951-2019")
+plt.bar(se_HisRainyColdD.index, se_HisRainyColdD / len(df_PRCP.groupby('year')) * 100, color=list(map(lambda v:color(tuple(hsv2rgb(int(2.4 * v) + 120, 1, 1))), se_HisRainyColdD.values)))
+plt.gca().xaxis.set_major_locator(MultipleLocator(31))
+plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
+plt.ylim(0, 100)
+plt.gca().yaxis.set_major_locator(plt.MultipleLocator(10))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: str(y * 10 - 10) + '%'))
 plt.show()
 
 
 
 # 365天的散点图
-
-
-# 画布基础设置
-if ISTEST == False:
-    plt.rcParams['figure.figsize'] = (12.0, 8.0) # 设置figure_size尺寸
-    plt.rcParams['image.interpolation'] = 'nearest' # 设置 interpolation style
-    plt.rcParams['image.cmap'] = 'gray' # 设置 颜色 style
-
-    plt.rcParams['savefig.dpi'] = 300 #图片像素
-    plt.rcParams['figure.dpi'] = 300 #分辨率
 
 # TAVG
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
@@ -227,7 +294,8 @@ plt.gca().grid()# 网格
 # plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
 plt.scatter(df_TAVG['dayIndex'], df_TAVG['value'], s=80, c=df_TAVG['color'], marker='.', alpha=0.05)
 
-
+plt.gca().yaxis.set_major_locator(plt.MultipleLocator(10))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: str(y * 10) + 'C°'))
 plt.ylim(-30, 50)
 
 plt.title('TAVG : 1951-2019')
@@ -239,8 +307,8 @@ if ISTEST == False:
     plt.savefig("./data/TAVG.png",dpi=300)
 
 plt.show()
-print('TMAX = '+ str(tMax) + 'C :' + tMaxTime)
-print('TMIN = '+ str(tMin) + 'C :' + tMinTime)
+print('TMAX = '+ str(tMax) + 'C°:' + tMaxTime)
+print('TMIN = '+ str(tMin) + 'C°:' + tMinTime)
 
 
 
@@ -248,7 +316,7 @@ print('TMIN = '+ str(tMin) + 'C :' + tMinTime)
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
 plt.gca().yaxis.set_major_locator(plt.MultipleLocator(10))
-plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: y * 10))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: str(y * 10) + 'mm') )
 
 plt.gca().grid()# 网格
 #plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
@@ -268,7 +336,7 @@ plt.show()
 print('PMAX = '+ str(pMax) + 'mm :' + pMaxTime)
 
 # PCRP补充雨季显示 pass
-
+'''
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
 plt.gca().yaxis.set_major_locator(plt.MultipleLocator(5))
@@ -288,7 +356,7 @@ if ISTEST == False:
     plt.savefig("./data/PRCP_RAINDAY.png",dpi=300)
 
 plt.show()
-
+'''
 
 # 12 x 31 的3D散点图
 
