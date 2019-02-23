@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame,Series
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
@@ -151,20 +151,23 @@ for _d in dataList:
 
 # 年降雨天数统计
 se_rainyD = (df_PRCP[df_PRCP['value'] > 0]).groupby('year')['value'].count()
+df_rainyD = se_rainyD.to_frame('rainyDays')
 # 年高温天数统计
 se_LowT = (df_TAVG[df_TAVG['value'] < 10]).groupby('year')['value'].count()
+df_LowT = se_LowT.to_frame('coldDays')
 # 年低温天数统计
 se_HighT = (df_TAVG[df_TAVG['value'] > 30]).groupby('year')['value'].count()
+df_HighT = se_HighT.to_frame('hotDays')
+
+df_YearCount = pd.concat([df_rainyD,df_LowT,df_HighT],axis=1,sort=False)
 
 
-
-
-df_YearCount = DataFrame()
-df_YearCount['year'] = se_rainyD.index
-df_YearCount = df_YearCount.set_index('year')
-df_YearCount['rainyDays'] = se_rainyD.values
-df_YearCount['coldDays'] = se_LowT.values
-df_YearCount['hotDays'] = se_HighT.values
+#df_YearCount = DataFrame()
+#df_YearCount['year'] = se_rainyD.index
+#df_YearCount = df_YearCount.set_index('year')
+#df_YearCount['rainyDays'] = se_rainyD.values
+#df_YearCount['coldDays'] = se_LowT.values
+#df_YearCount['hotDays'] = se_HighT.values
 
 
 
@@ -190,6 +193,21 @@ plt.show()
 df_PRCP = df_PRCP.set_index('datetime')
 df_TAVG = df_TAVG.set_index('datetime')
 #print(t)
+
+# 历史同日降雨次数统计
+se_HisRainyD = (df_PRCP[df_PRCP['value'] > 0]).groupby('dayIndex')['value'].count()
+#df_HisRainyD = se_HisRainyD.to_frame('count')
+#df_HisRainyD['color'] = Series(map(lambda v:color(tuple(hsv2rgb(int(-7 * v) + 240, 1, 1))), se_HisRainyD.values)).values
+
+plt.xlabel("Month")
+plt.title("Historical Same Day Rainy Count")
+plt.bar(se_HisRainyD.index, se_HisRainyD, color=list(map(lambda v:color(tuple(hsv2rgb(int(-7 * v) + 240, 1, 1))), se_HisRainyD.values)))
+plt.gca().xaxis.set_major_locator(MultipleLocator(31))
+plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
+plt.show()
+
+
+
 # 365天的散点图
 
 
