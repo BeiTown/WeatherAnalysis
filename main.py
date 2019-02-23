@@ -267,7 +267,7 @@ plt.show()
 
 print('PMAX = '+ str(pMax) + 'mm :' + pMaxTime)
 
-# PCRP补充雨季显示
+# PCRP补充雨季显示 pass
 
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
