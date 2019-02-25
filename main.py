@@ -134,11 +134,12 @@ for _d in dataList:
                 pMaxTime = _year + '/' + _month + '/' + str(i)
 
             _color = '#FFFFFF'
-            if _value != -999.9:
+            if _value > 0:
                 _color = color(tuple(hsv2rgb(int(_value * 0.75) + 180, 1, 1)))  # 设置数据颜色值
-
+            elif _value != -999.9:
+                _color = '#FFFFFF'
             _df = DataFrame({'datetime': [_datetime], 'year': [_year], 'month': [_month], 'day': [i], 'dayIndex': [pdi],
-                             'value': [_value], 'color': [_color]})  #
+                             'value': [_value], 'color': [_color]})
             df_PRCP = df_PRCP.append(_df, ignore_index=True)  # 将单行数据添加至总DF中
 
         # 平均气温记录
@@ -182,13 +183,13 @@ df_PRCP = df_PRCP.set_index('datetime')
 df_TAVG = df_TAVG.set_index('datetime')
 
 # 画布基础设置
-if ISTEST == True:
-    plt.rcParams['figure.figsize'] = (12.0, 8.0)  # 设置figure_size尺寸
+#if 1 == 0:
+plt.rcParams['figure.figsize'] = (10.0, 6.0)  # 设置figure_size尺寸
 
-    plt.rcParams['image.cmap'] = 'gray'  # 设置 颜色 style
+plt.rcParams['image.cmap'] = 'gray'  # 设置 颜色 style
 
-    plt.rcParams['savefig.dpi'] = 300  # 图片像素
-    plt.rcParams['figure.dpi'] = 300  # 分辨率
+plt.rcParams['figure.dpi'] = 200  # 分辨率
+plt.rcParams['savefig.dpi'] = 200  # 图片像素
 plt.rcParams['image.interpolation'] = 'nearest'  # 设置 interpolation style
 # 柱状图
 
@@ -395,8 +396,32 @@ print('TMAX = ' + str(tMax) + 'C°:' + tMaxTime)
 print('TMIN = ' + str(tMin) + 'C°:' + tMinTime)
 print('PMAX = ' + str(pMax) + 'mm :' + pMaxTime)
 
-df_stillRainyD
-# PCRP补充雨季显示 pass
+
+# PCRP补充雨季显示
+df_rainyAll = df_PRCP[df_PRCP['value'] > 0]
+plt.scatter(df_rainyAll['dayIndex'], df_rainyAll['year'], s=20, c=df_rainyAll['color'], marker='|', alpha=1)  # 散点图绘制
+plt.xlabel("Month")
+plt.ylabel("Year")
+plt.title("Historical Rainy Show : 1951-2019")
+
+
+# 设置主刻度
+plt.xlim(0, 365)
+plt.gca().xaxis.set_major_locator(MultipleLocator(31))
+plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
+plt.gca().yaxis.set_major_locator(MultipleLocator(5))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: int(x + 1950)))
+# 设置次刻度
+plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
+plt.gca().yaxis.set_minor_locator(MultipleLocator(1))
+
+# 打开网格
+plt.gca().xaxis.grid(True, which='major')  # x坐标轴的网格使用主刻度
+plt.gca().yaxis.grid(True, which='minor')  # y坐标轴的网格使用次刻度
+if ISTEST == False:
+    plt.savefig("./data/Historical Rainy Show.png")  # 保存图片
+plt.show()
+
 '''
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
