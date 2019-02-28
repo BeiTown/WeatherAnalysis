@@ -404,13 +404,12 @@ plt.xlabel("Month")
 plt.ylabel("Year")
 plt.title("Historical Rainy Show : 1951-2019")
 
-
 # 设置主刻度
 plt.xlim(0, 365)
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
 plt.gca().yaxis.set_major_locator(MultipleLocator(5))
-plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: int(x + 1950)))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: int(x + 1951)))
 # 设置次刻度
 plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
 plt.gca().yaxis.set_minor_locator(MultipleLocator(1))
@@ -422,6 +421,30 @@ if ISTEST == False:
     plt.savefig("./data/Historical Rainy Show.png")  # 保存图片
 plt.show()
 
+
+
+# TAVG补温度显示
+plt.scatter(df_TAVG['dayIndex'], df_TAVG['year'], s=20, c=df_TAVG['color'], marker='|', alpha=1)  # 散点图绘制
+plt.xlabel("Month")
+plt.ylabel("Year")
+plt.title("Historical TAVG Show : 1951-2019")
+
+# 设置主刻度
+plt.xlim(0, 365)
+plt.gca().xaxis.set_major_locator(MultipleLocator(31))
+plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
+plt.gca().yaxis.set_major_locator(MultipleLocator(5))
+plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, y: int(x + 1951)))
+# 设置次刻度
+plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
+plt.gca().yaxis.set_minor_locator(MultipleLocator(1))
+
+# 打开网格
+plt.gca().xaxis.grid(True, which='major')  # x坐标轴的网格使用主刻度
+plt.gca().yaxis.grid(True, which='minor')  # y坐标轴的网格使用次刻度
+if ISTEST == False:
+    plt.savefig("./data/Historical TAVG Show.png")  # 保存图片
+plt.show()
 '''
 plt.gca().xaxis.set_major_locator(MultipleLocator(31))
 plt.gca().xaxis.set_major_formatter(FuncFormatter(month_formatter))
